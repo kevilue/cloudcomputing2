@@ -1,0 +1,5 @@
+pymongo
+Flask
+python-dotenv
+pytest
+Gunicorn

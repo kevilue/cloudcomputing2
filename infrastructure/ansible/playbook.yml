@@ -1,0 +1,86 @@
+---
+
+# Webapp
+
+- name: Get and install WebApp
+  hosts: remote-hosts
+  become: true
+  vars:
+    MONGO_URI: "{{ lookup('env', 'MONGO_URI') }}"
+  tasks:
+    - name: Install git
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
+    - name: Clone WebApp repository
+      git:
+        repo: https://github.com/kevilue/simpleJokeApp.git
+        dest: ~/simpleJokeApp
+        clone: yes
+        update: yes
+
+    - name: Install python for docker
+      apt:
+        name: python3-pip
+        state: latest
+        update_cache: yes
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: true
+
+    - name: Install Docker Module for Python
+      pip:
+        name: docker
+
+    - name: Add azureuser to Docker group
+      user:
+        name: azureuser
+        groups: docker
+        append: yes
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Build Docker image
+      community.docker.docker_image:
+        source: build
+        name: webapp
+        state: present
+        build:
+          path: /root/simpleJokeApp
+          dockerfile: Dockerfile
+
+    - name: Start Docker image
+      community.docker.docker_container:
+        name: webapp_container
+        image: webapp
+        state: started
+        published_ports:
+          - "0.0.0.0:80:8080"
+        env: 
+          MONGO_URI: "{{ MONGO_URI }}"
+        restart_policy: always
+
+    - name: Allow port
+      ufw:
+        rule: allow
+        port: 80
+        proto: tcp
