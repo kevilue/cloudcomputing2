@@ -30,7 +30,7 @@ collection_name=$(echo "$public_ip" | tr -d '.')
 export MONGO_COLLECTION="$collection_name"
 # Install requirements
 pip install -r requirements.txt
-# Create collection in MongoDB with python script
+# Check MongoDB connection and ask user if they want to create a database/collection for the webapp
 python3 db_config.py -collection "$collection_name" -connection_string "$mongodb_connection_string"
 
 # Execute ansible playbook with inventory to configure the vm
