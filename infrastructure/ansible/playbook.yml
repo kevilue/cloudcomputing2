@@ -7,6 +7,7 @@
   become: true
   vars:
     MONGO_URI: "{{ lookup('env', 'MONGO_URI') }}"
+    MONGO_COLLECTION: "{{ lookup('env', 'MONGO_COLLECTION') }}"
   tasks:
     - name: Install git
       apt:
@@ -77,6 +78,7 @@
           - "0.0.0.0:80:8080"
         env: 
           MONGO_URI: "{{ MONGO_URI }}"
+          MONGO_COLLECTION: "{{ MONGO_COLLECTION }}"
         restart_policy: always
 
     - name: Allow port

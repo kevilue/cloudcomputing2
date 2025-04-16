@@ -17,9 +17,13 @@ except:
 
 app = Flask(__name__)
 
+# MongoDB connection
 client = pymongo.MongoClient(MONGO_URI)
 db = client["jokes"]
-collection = db["pub"]
+# Get name of collection from environment variable
+# If not found, use default name "pub" for public storage
+collection_name = os.environ.get("MONGO_COLLECTION", "pub")
+collection = db[collection_name]
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -42,12 +46,12 @@ def insert_joke_to_db():
     """Insert a joke from a json object to the database."""
     if request.method == "POST":
         data = request.data.decode("utf-8")
+        # Max size of request is 5000
         if len(data) < 5000: data = json.loads(data) 
         else: return "Invalid request size"
         # Check if joke already exists in db
         exist_check = collection.count_documents({"joke": data["joke"]})
         print("Exist check: " + str(exist_check))	
-        # Max size of request is 5000
         if exist_check == 0:
             print("Adding joke: " + data["joke"])
             # Insert joke to db
