@@ -14,7 +14,7 @@ export MONGO_URI="$mongodb_connection_string"
 # Get ssh key name from terraform variables
 ssh_key_name=$(terraform -chdir=./terraform output -raw azure_vm_ssh_publickey_location | cut -d "." -f2 | cut -d "/" -f2)
 # Build full path to ssh key
-full_ssh_key_path="/home/azureuser/.ssh/$ssh_key_name"
+full_ssh_key_path="~/.ssh/$ssh_key_name"
 
 # Check if the SSH key exists
 if [ ! -f "$full_ssh_key_path" ]; then
