@@ -11,14 +11,14 @@ mongodb_connection_string=$(terraform -chdir=./terraform output -raw mongodb_con
 # Set the environment variable for MongoDB connection string
 export MONGO_URI="$mongodb_connection_string"
 
-# Get ssh key name from terraform variables
-ssh_key_name=$(terraform -chdir=./terraform output -raw azure_vm_ssh_publickey_location | cut -d "." -f2 | cut -d "/" -f2)
-# Build full path to ssh key
-full_ssh_key_path="~/.ssh/$ssh_key_name"
+# Get full ssh public key path from terraform variables
+full_ssh_key_path=$(terraform -chdir=./terraform output -raw azure_vm_ssh_publickey_location)
+# Build full path to ssh private key
+private_key_path=${full_ssh_key_path%.*}
 
-# Check if the SSH key exists
-if [ ! -f "$full_ssh_key_path" ]; then
-    echo "SSH key not found at $full_ssh_key_path. Please check the path and try again."
+# Check if the ssh key file exists
+if [ ! -f "$private_key_path" ]; then
+    echo "SSH key not found at $private_key_path. Please check the path and try again."
     exit 1
 fi
 
@@ -34,7 +34,7 @@ pip install -r requirements.txt
 python3 db_config.py -collection "$collection_name" -connection_string "$mongodb_connection_string"
 
 # Execute ansible playbook with inventory to configure the vm
-ansible-playbook -i ./ansible/node_inventory.ini ./ansible/playbook.yml --private-key $full_ssh_key_path -e "MONGO_URI=$mongodb_connection_string"
+ansible-playbook -i ./ansible/node_inventory.ini ./ansible/playbook.yml --private-key $private_key_path -e "MONGO_URI=$mongodb_connection_string"
 
 # Print the public IP address of the VM
 echo "The simpleJokeApp application is now available at: $public_ip"
